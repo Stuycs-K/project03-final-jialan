@@ -25,43 +25,29 @@ char** list_players() {
   return players;
 }
 
-//create a lobby
-int create_lobby() {
-  int lobby_read;
 
-  printf("Created lobby.\n");
-  if (mkfifo(WKP,0644)==-1) {
-    perror("WKP mkfifo error");
-    exit(1);
+int player_match() {
+  int to_server;
+  int from_server;
+  from_server = client_handshake( &to_server );
+  char buffer[30];
+  //server sends player the private pipe which they will communicate with other player
+  //for now just the server
+  for (int i=0; i<3; i++) {
+    read(from_server, buffer, sizeof(buffer));
+    printf("Server sent: %s", buffer);
+    fgets(buffer, 30, stdin);
+    write(to_server, buffer, sizeof(buffer));
   }
-  lobby_read = open(WKP, O_RDONLY);
-  remove(WKP);
-
-  return lobby_read;
-}
-
-//struct players *p
-
-int lobby() {
-  char client_name[256];
-  int lobby_read = create_lobby();
-
-  int r = read(lobby_read, client_name, sizeof(client_name));
-  printf("Player %s is available...\n", client_name);
-  //add players
-
-}
-
-int player_connect(int *to_lobby) {
-  char pipe_name[256];
-  sprintf(pipe_name, "%d", getpid());
-  if (mkfifo(pipe_name, 0644)==-1) {
-    perror("private pipe mkfifo error");
-    exit(1);
-  }
-  *to_lobby = open(WKP, O_WRONLY);
-  int w = write(*to_lobby, pipe_name, sizeof(pipe_name));
-  printf("Player %s: Conneting to lobby...\n", pipe_name);
+  // char pipe_name[256];
+  // sprintf(pipe_name, "%d", getpid());
+  // if (mkfifo(pipe_name, 0644)==-1) {
+  //   perror("private pipe mkfifo error");
+  //   exit(1);
+  // }
+  // *to_lobby = open(WKP, O_WRONLY);
+  // int w = write(*to_lobby, pipe_name, sizeof(pipe_name));
+  // printf("Player %s: Conneting to lobby...\n", pipe_name);
 
 }
 
@@ -81,6 +67,9 @@ int player_action() {
 
 // waiting for a player to exist
 
+//player and server connect
+//server creates WKP for all players to go onto-- basically the forking lab
+//player confirm connection to server
 
 // can send request for a match
 // open the new pipe, and start game
