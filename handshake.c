@@ -65,5 +65,6 @@ int client_handshake(int* to_server) {
     exit(1);
   }
   printf("Successfully connected to the lobby...\n");
+  close(from_server);
   return from_server;
 }
