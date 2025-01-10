@@ -30,7 +30,7 @@ int server_handshake(int* to_client) {
   int received_num;
   r = read(from_client, &received_num, sizeof(int));
   if (received_num==rand_num+1) {
-    printf("Successfully connected to the lobby\n");
+    printf("Successfully booted up\n");
   }
   return from_client;
 }
@@ -64,5 +64,6 @@ int client_handshake(int* to_server) {
     perror("error client writing back to server");
     exit(1);
   }
+  printf("Successfully connected to the lobby...\n");
   return from_server;
 }

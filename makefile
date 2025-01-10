@@ -1,7 +1,3 @@
-player: player
-	@./player
-server: server
-	@./server
 compile: player server
 server: server.o handshake.o
 	@gcc -o server server.o handshake.o

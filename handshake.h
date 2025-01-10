@@ -10,7 +10,7 @@
 #ifndef NETWORKING_H
 #define NETWORKING_H
 
-#define WKP lobby
+#define WKP "lobby"
 
 int server_setup();
 int server_handshake(int* to_client);

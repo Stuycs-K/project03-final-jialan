@@ -4,7 +4,7 @@ int main() {
   int to_client;
   int from_client;
 
-  from_client = server_handshake( to_client );
+  from_client = server_handshake( &to_client );
   return 0;
   // char client_name[256];
   // int lobby_read = create_lobby();
