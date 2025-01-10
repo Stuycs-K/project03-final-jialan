@@ -1,15 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <errno.h>
+#include "handshake.h"
 
-#define WKP lobby
-
-//lobby setup
 int server_setup() {
   int from_client = 0;
   printf("Starting up game...\n");
