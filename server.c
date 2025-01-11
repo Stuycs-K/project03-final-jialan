@@ -30,25 +30,41 @@ int main() {
     // }
 
     //Server listens for new clients (connection) on WKP
-    printf("Waiting for connections...\n");
-    int pid;
-    if (FD_ISSET(listen_socket, &read_fds)) {
-      char pipe_name[BUFFER_SIZE];
-      read(listen_socket, &pid, sizeof(pid));
-      //printf("Player %d connected to lobby...\n", pid);
-      sprintf(pipe_name, "%d", pid);
-  	//add to fd to listen for
-  	client_fds[client_count] = open(pipe_name, O_RDONLY); //nonblock?
-  	FD_SET(client_fds[client_count], &read_fds);
-    client_count++;
+	char pipe_name[BUFFER_SIZE];
+    for (int i=0;i<MAX_CLIENTS;i++) {
+    	if (FD_ISSET(i, &read_fds)) {
+    		if (i==listen_socket) {
+    			read(listen_socket, &pid, sizeof(pid));
+    			sprintf(pipe_name, "%d", pid);
+    			int client_fds[i] = open(pipe_name, O_RDONLY);
+    			FD_SET(client_fds[i], &read_fds);
+    		}
+    		else {
+    			read(client_fds[i], buffer, sizeof(buffer));
+    			printf("Player choice: %s\n", buffer);
+    			FD_CLR(client_fds[i], &current_sockets);
+    		}
+    	}
     }
+    // printf("Waiting for connections...\n");
+    // int pid;
+    // if (FD_ISSET(listen_socket, &read_fds)) {
+      // char pipe_name[BUFFER_SIZE];
+      // read(listen_socket, &pid, sizeof(pid));
+      // //printf("Player %d connected to lobby...\n", pid);
+      // sprintf(pipe_name, "%d", pid);
+  	// //add to fd to listen for
+  	// client_fds[client_count] = open(pipe_name, O_RDONLY); //nonblock?
+  	// FD_SET(client_fds[client_count], &read_fds);
+    // client_count++;
+    // }
 
-    for (int i=0; i<MAX_CLIENTS;i++) {
-   	if (FD_ISSET(client_fds[i], &read_fds)) {
-   		read(client_fds[i], buffer, sizeof(buffer));
-   		printf("Player choice: %s\n", buffer);
-   		}
-    }
-   }
+    // for (int i=0; i<MAX_CLIENTS;i++) {
+   	// if (FD_ISSET(client_fds[i], &read_fds)) {
+   		// read(client_fds[i], buffer, sizeof(buffer));
+   		// printf("Player choice: %s\n", buffer);
+   		// }
+    // }
+   // }
    return 0;
 }
