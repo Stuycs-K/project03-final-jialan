@@ -6,45 +6,30 @@
 #include <sys/select.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "handshake.h"
 
 #define WKP "lobby"
 #define BUFFER_SIZE 256
 #define MAX_CLIENTS 2
 
-struct clients {
-	char pipe_name[BUFFER_SIZE];
-	int client_fd;
-}
-
-struct clients * init() {
-	struct clients * client_list = (struct clients*)malloc(MAX_CLIENTS*sizeof(struct clients));
-	for (int i=0; i<MAX_CLIENTS;i++) {
-		*(client_list + i) = NULL;
-	}
-	return client_list;
-}
-
 int main() {
-    int wkp_fd, client_fds[MAX_CLIENTS] = {0};
+    int wkp_fd;
+    int client_fds[MAX_CLIENTS] = {0};
+    int client_names[MAX_CLIENTS] = {0};
     int client_count = 0;
-    fd_set read_fds;
     char buffer[BUFFER_SIZE];
+    char client_pipe_name[BUFFER_SIZE];
+    fd_set read_fds;
 
-    // Create and open the WKP
-    mkfifo(WKP, 0644);
-    wkp_fd = open(WKP, O_RDONLY);
-    if (wkp_fd==-1) {
-        perror("Failed to open WKP");
-        exit(1);
-    }
-    printf("Server started. Waiting for connections...\n");
+    // server setup
+    wkp_fd = server_setup();
 
     while (1) {
-        FD_ZERO(&read_fds); //init set
-        FD_SET(wkp_fd, &read_fds); // add WKP to set
+        FD_ZERO(&read_fds);
+        FD_SET(wkp_fd, &read_fds);
         int max_fd = wkp_fd;
 
-		// add clients to set
+        // add clients to set
         for (int i = 0; i < client_count; i++) {
             FD_SET(client_fds[i], &read_fds);
             if (client_fds[i] > max_fd) {
@@ -52,25 +37,29 @@ int main() {
             }
         }
 
-        if (select(max_fd + 1, &read_fds, NULL, NULL, NULL)==-1) {
+        int activity = select(max_fd + 1, &read_fds, NULL, NULL, NULL);
+        if (activity < 0) {
             perror("select error");
-            exit(1);
+            break;
         }
 
         // check if WKP has a new connection
-        struct clients* client_list = init();
         if (FD_ISSET(wkp_fd, &read_fds)) {
-            char client_pipe_name[BUFFER_SIZE];
-            int bytes_read = read(wkp_fd, client_pipe_name, sizeof(client_pipe_name));
-            printf("New client connected: %s\n", client_pipe_name);
-            if (client_count < MAX_CLIENTS) {
-                int client_fd = open(client_pipe_name, O_RDONLY);
-                client_fds[client_count++] = client_fd;
-                strncpy(*(client_list + client_count)->pipe_name, client_pipe_name, 10);
-                *(client_list + client_count)->client_fd = client_count;
-                } 
-            else {
-                printf("Max clients reached. Cannot accept %s\n", client_pipe_name);
+        	int client_pid;
+            int bytes_read = read(wkp_fd, &client_pid, sizeof(client_pid));
+            sprintf(client_pipe_name, "%d", client_pid);
+            
+            if (bytes_read > 0) {
+                printf("New client connected: %s\n", client_pipe_name);
+                if (client_count < MAX_CLIENTS) {
+                    int client_fd = open(client_pipe_name, O_RDONLY);
+                    client_fds[client_count] = client_fd;
+                    client_names[client_count] = client_pid;
+                    client_count++;
+                } else {
+                    printf("Max clients reached. Cannot accept %s\n", client_pipe_name);
+                    break;
+                }
             }
         }
 
@@ -80,18 +69,18 @@ int main() {
                 int bytes_read = read(client_fds[i], buffer, sizeof(buffer) - 1);
                 if (bytes_read > 0) {
                     buffer[bytes_read] = '\0';
-                    printf("Received from client %d: %s\n", i + 1, buffer);
+                    printf("Received from client %d: %s\n", client_names[i], buffer);
                 } else if (bytes_read == 0) {
-                    printf("Client %d disconnected\n", i + 1);
+                    printf("Client %d disconnected\n", client_names[i]);
                     close(client_fds[i]);
-                    client_fds[i] = client_fds[--client_count];
-                    i--;
+                    client_fds[i] = client_fds[--client_count]; 
+                    i--; 
                 }
             }
         }
     }
 
     close(wkp_fd);
-    remove(WKP);
+    remove(WKP);  // Clean up WKP
     return 0;
 }
