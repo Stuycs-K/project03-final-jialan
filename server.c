@@ -11,9 +11,17 @@
 #define BUFFER_SIZE 256
 #define MAX_CLIENTS 2
 
-struct list_clients {
+struct clients {
 	char pipe_name[BUFFER_SIZE];
 	int client_fd;
+}
+
+struct clients * init() {
+	struct clients * client_list = (struct clients*)malloc(MAX_CLIENTS*sizeof(struct clients));
+	for (int i=0; i<MAX_CLIENTS;i++) {
+		*(client_list + i) = NULL;
+	}
+	return client_list;
 }
 
 int main() {
@@ -50,6 +58,7 @@ int main() {
         }
 
         // check if WKP has a new connection
+        struct clients* client_list = init();
         if (FD_ISSET(wkp_fd, &read_fds)) {
             char client_pipe_name[BUFFER_SIZE];
             int bytes_read = read(wkp_fd, client_pipe_name, sizeof(client_pipe_name));
@@ -57,7 +66,8 @@ int main() {
             if (client_count < MAX_CLIENTS) {
                 int client_fd = open(client_pipe_name, O_RDONLY);
                 client_fds[client_count++] = client_fd;
-                
+                strncpy(*(client_list + client_count)->pipe_name, client_pipe_name, 10);
+                *(client_list + client_count)->client_fd = client_count;
                 } 
             else {
                 printf("Max clients reached. Cannot accept %s\n", client_pipe_name);
