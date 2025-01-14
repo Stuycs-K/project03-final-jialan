@@ -20,6 +20,7 @@ static void sighandler(int signo) {
 }
 
 int main() {
+	signal(SIGINT, sighandler);
 	char pipe_name[BUFFER_SIZE];
 	int pid = getpid();
     sprintf(pipe_name, "%d", pid);
