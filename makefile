@@ -9,3 +9,7 @@ server.o: server.c handshake.h
 	@gcc -c server.c
 handshake.o: handshake.c handshake.h 
 	@gcc -c handshake.c
+clean:
+	@rm *.o
+	@rm player
+	@rm server

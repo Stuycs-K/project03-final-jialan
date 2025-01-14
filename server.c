@@ -75,7 +75,15 @@ int write_to_players(int i, char* buffer) {
         if (opponent != i) {
             sprintf(buffer, "Player %s chose %s", client_names[i], actions[i]);
             int to_client = open(client_names[opponent], O_WRONLY);
+            if (to_client==-1) {
+            	perror("opening to client write error");
+            }
             int bytes_write = write(to_client, buffer, sizeof(buffer));
+            printf("Wrote to clients: %s", buffer);
+            if (bytes_write==-1) {
+            	perror("writing to client error");
+            }
+            printf("bytes wrote %d\n", bytes_write);
             close(to_client);
         }
     }
