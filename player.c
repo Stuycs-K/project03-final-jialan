@@ -10,53 +10,50 @@
 #define WKP "lobby"
 #define BUFFER_SIZE 256
 
+char pipe_name[BUFFER_SIZE];
+
 static void sighandler(int signo) {
   if (signo == SIGINT) {
-    char pipe_name[BUFFER_SIZE];
-    sprintf(pipe_name, "%d", getpid());
     remove(pipe_name);
     kill(getpid(), SIGTERM);
   }
 }
 
 int main() {
-	signal(SIGINT, sighandler);
-	char pipe_name[BUFFER_SIZE];
-	int pid = getpid();
-    sprintf(pipe_name, "%d", pid);
-    
+    //creating private pipe
+    sprintf(pipe_name, "%d", getpid());
     mkfifo(pipe_name, 0644);
 
+    //connecting to server
     int wkp_fd = open(WKP, O_WRONLY);
     if (wkp_fd < 0) {
-        perror("Failed to connect to WKP");
+        perror("Failed to connect to server (WKP)");
         exit(1);
     }
-
-    write(wkp_fd, &pid, sizeof(pid));
+    write(wkp_fd, pipe_name, sizeof(pipe_name));
     close(wkp_fd);
 
+    //writing to server
     int client_fd = open(pipe_name, O_WRONLY);
     if (client_fd < 0) {
         perror("Failed to open client pipe");
         exit(1);
     }
-
     char buffer[BUFFER_SIZE];
-    printf("Enter...\n");
+    printf("Enter: ");
     fgets(buffer, BUFFER_SIZE, stdin);
-    //printf("Attempt to match with player %s", buffer);
     write(client_fd, buffer, sizeof(buffer));
-    printf("Sent %s to player", buffer);
-
+    printf("Sent %s to player\n", buffer);
     close(client_fd);
 
-	//reading from server
-	int from_server = open(pipe_name, O_RDONLY);
-	read(from_server, buffer, sizeof(buffer));
-	printf("Received from server: %s", buffer);
-	
+    //reading from server
+    printf("Waiting on opponent...\n");
+    char buffer2[BUFFER_SIZE];
+    int from_server = open(pipe_name, O_RDONLY);
+    read(from_server, buffer2, sizeof(buffer2));
+    printf("Received from server: %s\n", buffer2);
     
+	close(from_server);
     remove(pipe_name);
     return 0;
 }

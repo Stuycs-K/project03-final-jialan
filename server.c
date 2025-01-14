@@ -14,11 +14,11 @@
 #define MAX_CLIENTS 2
 
 int client_fds[MAX_CLIENTS];
-int client_names[MAX_CLIENTS];
-int client_count = 0;
-int response = 0;
-int responses[MAX_CLIENTS];
+char* client_names[MAX_CLIENTS];
 char *actions[MAX_CLIENTS];
+int response = 0;
+int client_count = 0;
+int responses[MAX_CLIENTS];
 fd_set read_fds;
 
 static void sighandler(int signo) {
@@ -32,16 +32,14 @@ void check_connections(int wkp_fd) {
     // check if WKP has a new connection
     char client_pipe_name[BUFFER_SIZE];
     if (FD_ISSET(wkp_fd, &read_fds)) {
-        int client_pid;
-        int bytes_read = read(wkp_fd, &client_pid, sizeof(client_pid));
-        sprintf(client_pipe_name, "%d", client_pid);
-
+        int bytes_read = read(wkp_fd, client_pipe_name, sizeof(client_pipe_name));
         if (bytes_read > 0) {
             printf("New client connected: %s\n", client_pipe_name);
             if (client_count < MAX_CLIENTS) {
                 int client_fd = open(client_pipe_name, O_RDONLY);
                 client_fds[client_count] = client_fd;
-                client_names[client_count] = client_pid;
+                client_names[client_count] = malloc(strlen(client_pipe_name));
+                strcpy(client_names[client_count], client_pipe_name);
                 client_count++;
             } else {
                 printf("Max clients reached. Cannot accept %s\n", client_pipe_name);
@@ -70,6 +68,21 @@ void store_action(int i, char* buffer) {
     }
 }
 
+int write_to_players(int i, char* buffer) {
+	int temp_fd = dup(client_fds[i]);
+    close(client_fds[i]);
+    for (int opponent=0; opponent < client_count; opponent++) {
+        if (opponent != i) {
+            sprintf(buffer, "Player %s chose %s", client_names[i], actions[i]);
+            int to_client = open(client_names[opponent], O_WRONLY);
+            int bytes_write = write(to_client, buffer, sizeof(buffer));
+            close(to_client);
+        }
+    }
+    response = 0;
+    return temp_fd;       
+}
+
 int main() {
     signal(SIGINT, sighandler);
     int wkp_fd;
@@ -93,22 +106,28 @@ int main() {
 
         check_connections(wkp_fd);
 
-
         // check if any client FDs have data to read
         for (int i = 0; i < client_count; i++) {
             if (FD_ISSET(client_fds[i], &read_fds)) {
-                int bytes_read = read(client_fds[i], buffer, sizeof(buffer) - 1);
+                int bytes_read = read(client_fds[i], buffer, sizeof(buffer));
                 if (bytes_read > 0) {
                     buffer[bytes_read] = '\0';
-                    printf("Received from client %d: %s\n", client_names[i], buffer);
+                    printf("Received from client %s: %s\n", client_names[i], buffer);
 
                     store_action(i, buffer);
-                    printf("Stored action from client %d: %s\n", client_names[i], actions[i]);
+                    printf("Stored action from client %s: %s\n", client_names[i], actions[i]);
 
                     // write to clients when both are done
+                    printf("Response count: %d\n", response);
+                    if (response>=2) {
+                        client_fds[i] = write_to_players(i, buffer);
+                        printf("A game has ended.\n");
+                    }
                 }
             }
         }
     }
     return 0;
 }
+
+
