@@ -5,9 +5,19 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <signal.h>
 
 #define WKP "lobby"
 #define BUFFER_SIZE 256
+
+static void sighandler(int signo) {
+  if (signo == SIGINT) {
+    char pipe_name[BUFFER_SIZE];
+    sprintf(pipe_name, "%d", getpid());
+    remove(pipe_name);
+    kill(getpid(), SIGTERM);
+  }
+}
 
 int main() {
 	char pipe_name[BUFFER_SIZE];
@@ -25,7 +35,6 @@ int main() {
     write(wkp_fd, &pid, sizeof(pid));
     close(wkp_fd);
 
-    // Send messages to the server
     int client_fd = open(pipe_name, O_WRONLY);
     if (client_fd < 0) {
         perror("Failed to open client pipe");
@@ -40,6 +49,13 @@ int main() {
     printf("Sent request to player %s", buffer);
 
     close(client_fd);
-    remove(pipe_name);  // Clean up
+
+	//reading from server
+	int from_server = open(pipe_name, O_RDONLY);
+	read(from_server, buffer, sizeof(buffer));
+	printf("Received from server: %s", buffer);
+	
+    
+    remove(pipe_name);
     return 0;
 }

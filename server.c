@@ -6,13 +6,22 @@
 #include <sys/select.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <signal.h>
 #include "handshake.h"
 
 #define WKP "lobby"
 #define BUFFER_SIZE 256
 #define MAX_CLIENTS 2
 
+static void sighandler(int signo) {
+  if (signo == SIGINT) {
+    remove(WKP);
+    kill(getpid(), SIGTERM);
+  }
+}
+
 int main() {
+	signal(SIGINT, sighandler);
     int wkp_fd;
     int client_fds[MAX_CLIENTS] = {0};
     int client_names[MAX_CLIENTS] = {0};
@@ -70,6 +79,12 @@ int main() {
                 if (bytes_read > 0) {
                     buffer[bytes_read] = '\0';
                     printf("Received from client %d: %s\n", client_names[i], buffer);
+                    //write back to client
+                    //sprintf(client_pipe_name, "%d", client_names[i]);
+                    //int to_client = open(client_pipe_name, O_WRONLY);
+                    //strcpy(buffer, "You won?");
+                    //write(to_client, buffer, sizeof(buffer));
+                    
                 } else if (bytes_read == 0) {
                     printf("Client %d disconnected\n", client_names[i]);
                     close(client_fds[i]);
@@ -79,8 +94,5 @@ int main() {
             }
         }
     }
-
-    close(wkp_fd);
-    remove(WKP);  // Clean up WKP
     return 0;
 }
