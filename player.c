@@ -44,9 +44,9 @@ int main() {
     char buffer[BUFFER_SIZE];
     printf("Enter...\n");
     fgets(buffer, BUFFER_SIZE, stdin);
-    printf("Attempt to match with player %s", buffer);
+    //printf("Attempt to match with player %s", buffer);
     write(client_fd, buffer, sizeof(buffer));
-    printf("Sent request to player %s", buffer);
+    printf("Sent %s to player", buffer);
 
     close(client_fd);
 
