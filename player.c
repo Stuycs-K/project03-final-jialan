@@ -41,22 +41,23 @@ int main() {
         perror("Failed to open client pipe");
         exit(1);
     }
+    printf("Player %s\n", pipe_name);
     char buffer[BUFFER_SIZE];
     printf("Enter: ");
     fgets(buffer, BUFFER_SIZE, stdin);
+    buffer[strcspn(buffer, "\n")] = 0;
     write(client_fd, buffer, sizeof(buffer));
-    printf("Sent %s to player\n", buffer);
+    printf("Sent %s to opponent\n", buffer);
     close(client_fd);
 
     //reading from server
     printf("Waiting on opponent...\n");
     char buffer2[BUFFER_SIZE];
-    sleep(1);
     int from_server = open(pipe_name, O_RDONLY);
     read(from_server, buffer2, sizeof(buffer2));
     printf("Received from server: %s\n", buffer2);
-    
-	close(from_server);
+
+	  close(from_server);
     remove(pipe_name);
     return 0;
 }

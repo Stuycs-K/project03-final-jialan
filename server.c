@@ -88,7 +88,34 @@ int write_to_players(int i, char* buffer) {
         }
     }
     response = 0;
-    return temp_fd;       
+    return temp_fd;
+}
+
+int write_to_players2(int i, char* buffer) {
+  int temp_fd = dup(client_fds[i]);
+  int opponent;
+  if (i==(client_count-1)) {
+    opponent=i-1;
+  }
+  else {
+    opponent=i+1;
+  }
+  printf("---Player %s vs Player %s---\n", client_names[i], client_names[opponent]);
+
+  sprintf(buffer, "Player %s chose %s\n", client_names[i], actions[i]);
+  int to_client = open(client_names[opponent], O_WRONLY);
+  if (to_client==-1) {
+    perror("opening to client write error");
+  }
+  int bytes_write = write(to_client, buffer, sizeof(buffer));
+  printf("Wrote to client %s: %s", client_names[opponent], buffer);
+  if (bytes_write==-1) {
+    perror("writing to client error");
+  }
+  printf("Bytes wrote %d\n\n", bytes_write);
+  close(to_client);
+  response = 0;
+  return temp_fd;
 }
 
 int main() {
@@ -128,8 +155,10 @@ int main() {
                     // write to clients when both are done
                     printf("Response count: %d\n", response);
                     if (response>=2) {
-                        client_fds[i] = write_to_players(i, buffer);
-                        printf("A game has ended.\n");
+                      for (int i=0; i<2; i++) {
+                        client_fds[i] = write_to_players2(i, buffer);
+                      }
+                      printf("---A game has ended---\n");
                     }
                 }
             }
@@ -137,5 +166,3 @@ int main() {
     }
     return 0;
 }
-
-
