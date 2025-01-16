@@ -1,3 +1,7 @@
+startup:
+	@./server
+game:
+	@./player
 compile: player server
 server: server.o handshake.o
 	@gcc -o server server.o handshake.o
