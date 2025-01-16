@@ -11,11 +11,12 @@
 #define BUFFER_SIZE 256
 
 char pipe_name[BUFFER_SIZE];
+char pipe_name2[BUFFER_SIZE];
 
 static void sighandler(int signo) {
   if (signo == SIGINT) {
-  	//sprintf(pipe_name, "%d", getpid());
     remove(pipe_name);
+    remove(pipe_name2);
     kill(getpid(), SIGTERM);
   }
 }
@@ -32,6 +33,7 @@ int main() {
         perror("Failed to connect to server (WKP)");
         exit(1);
     }
+    // pipe_name[strlen(pipe_name)] = '\0';
     write(wkp_fd, pipe_name, sizeof(pipe_name));
     close(wkp_fd);
 
@@ -53,11 +55,19 @@ int main() {
     //reading from server
     printf("Waiting on opponent...\n");
     char buffer2[BUFFER_SIZE];
-    int from_server = open(pipe_name, O_RDONLY);
-    read(from_server, buffer2, sizeof(buffer2));
-    printf("Received from server: %s\n", buffer2);
 
-	  close(from_server);
+    strcat(pipe_name2, pipe_name);
+    strcat(pipe_name2, "_2");
+    mkfifo(pipe_name2, 0644);
+    printf("new pipe name: %s\n", pipe_name2);
+    
+    int from_server = open(pipe_name2, O_RDONLY);
+    int bytes_read = read(from_server, buffer2, sizeof(buffer2));
+    printf("Received from server: %s\n", buffer2);
+    printf("bytes read: %d\n", bytes_read);
+
+    close(from_server);
     remove(pipe_name);
+    remove(pipe_name2);
     return 0;
 }

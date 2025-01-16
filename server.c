@@ -69,19 +69,19 @@ void store_action(int i, char* buffer) {
 }
 
 int write_to_players(int i, char* buffer) {
-	int temp_fd = dup(client_fds[i]);
+    int temp_fd = dup(client_fds[i]);
     close(client_fds[i]);
     for (int opponent=0; opponent < client_count; opponent++) {
         if (opponent != i) {
             sprintf(buffer, "Player %s chose %s", client_names[i], actions[i]);
             int to_client = open(client_names[opponent], O_WRONLY);
             if (to_client==-1) {
-            	perror("opening to client write error");
+                perror("opening to client write error");
             }
             int bytes_write = write(to_client, buffer, sizeof(buffer));
             printf("Wrote to clients: %s", buffer);
             if (bytes_write==-1) {
-            	perror("writing to client error");
+                perror("writing to client error");
             }
             printf("bytes wrote %d\n", bytes_write);
             close(to_client);
@@ -92,7 +92,7 @@ int write_to_players(int i, char* buffer) {
 }
 
 int write_to_players2(int i, char* buffer) {
-  int temp_fd = dup(client_fds[i]);
+//   int temp_fd = dup(client_fds[i]);
   int opponent;
   if (i==(client_count-1)) {
     opponent=i-1;
@@ -102,20 +102,24 @@ int write_to_players2(int i, char* buffer) {
   }
   printf("---Player %s vs Player %s---\n", client_names[i], client_names[opponent]);
 
-  sprintf(buffer, "Player %s chose %s\n", client_names[i], actions[i]);
-  int to_client = open(client_names[opponent], O_WRONLY);
+  char buffer2[BUFFER_SIZE];
+  sprintf(buffer2, "Player %s chose %s\n", client_names[i], actions[i]);
+  char client_pipe2[BUFFER_SIZE];
+  sprintf(client_pipe2, "%s_2", client_names[opponent]);
+  printf("client pipe new: %s\n", client_pipe2);
+  int to_client = open(client_pipe2, O_WRONLY);
   if (to_client==-1) {
     perror("opening to client write error");
   }
-  int bytes_write = write(to_client, buffer, sizeof(buffer));
-  printf("Wrote to client %s: %s", client_names[opponent], buffer);
+  int bytes_write = write(to_client, buffer2, sizeof(buffer2));
+  printf("Wrote to client %s: %s", client_names[opponent], buffer2);
   if (bytes_write==-1) {
     perror("writing to client error");
   }
   printf("Bytes wrote %d\n\n", bytes_write);
   close(to_client);
   response = 0;
-  return temp_fd;
+//   return temp_fd;
 }
 
 int main() {
@@ -156,7 +160,7 @@ int main() {
                     printf("Response count: %d\n", response);
                     if (response>=2) {
                       for (int i=0; i<2; i++) {
-                        client_fds[i] = write_to_players2(i, buffer);
+                        write_to_players2(i, buffer);
                       }
                       printf("---A game has ended---\n");
                     }
