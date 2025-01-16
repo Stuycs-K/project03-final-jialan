@@ -10,7 +10,8 @@
 #include "handshake.h"
 
 #define WKP "lobby"
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 30
+#define PIPE_SIZE 10
 #define MAX_CLIENTS 2
 
 int client_fds[MAX_CLIENTS];
@@ -30,7 +31,7 @@ static void sighandler(int signo) {
 
 void check_connections(int wkp_fd) {
     // check if WKP has a new connection
-    char client_pipe_name[BUFFER_SIZE];
+    char client_pipe_name[PIPE_SIZE];
     if (FD_ISSET(wkp_fd, &read_fds)) {
         int bytes_read = read(wkp_fd, client_pipe_name, sizeof(client_pipe_name));
         if (bytes_read > 0) {
@@ -38,7 +39,7 @@ void check_connections(int wkp_fd) {
             if (client_count < MAX_CLIENTS) {
                 int client_fd = open(client_pipe_name, O_RDONLY);
                 client_fds[client_count] = client_fd;
-                client_names[client_count] = malloc(strlen(client_pipe_name));
+                client_names[client_count] = malloc(strlen(client_pipe_name)+1);
                 strcpy(client_names[client_count], client_pipe_name);
                 client_count++;
             } else {
@@ -61,7 +62,7 @@ int add_clients(int max_fd) {
 
 void store_action(int i, char* buffer) {
     if (responses[i] == 0) {
-        actions[i] = malloc(strlen(buffer) + 1);
+        actions[i] = malloc(strlen(buffer)+1);
         strcpy(actions[i], buffer);
         responses[i] = 1;
         response++;
@@ -91,8 +92,7 @@ int write_to_players(int i, char* buffer) {
     return temp_fd;
 }
 
-int write_to_players2(int i, char* buffer) {
-//   int temp_fd = dup(client_fds[i]);
+void write_to_players2(int i, char* buffer) {
   int opponent;
   if (i==(client_count-1)) {
     opponent=i-1;
@@ -101,6 +101,25 @@ int write_to_players2(int i, char* buffer) {
     opponent=i+1;
   }
   printf("---Player %s vs Player %s---\n", client_names[i], client_names[opponent]);
+
+  //checking who won
+  if (strcmp(actions[i], "paper") {
+  	if (strcmp(actions[opponent], "rock")) {
+  		// i won
+  	}
+  	else if (strcmp(actions[i], "scissors")) {
+  		if (strcmp(actions[opponent], "paper"))
+  		// i won
+  	}
+  	else if (strcmp(actions[i], "rock")) {
+  		if (strcmp(actions[opponent], "scissors")) {
+  			//i won
+  		}
+  	}
+  	else {
+  		// opponent wins
+  	}
+  }
 
   char buffer2[BUFFER_SIZE];
   sprintf(buffer2, "Player %s chose %s\n", client_names[i], actions[i]);
@@ -119,7 +138,6 @@ int write_to_players2(int i, char* buffer) {
   printf("Bytes wrote %d\n\n", bytes_write);
   close(to_client);
   response = 0;
-//   return temp_fd;
 }
 
 int main() {

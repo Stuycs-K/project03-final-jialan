@@ -22,3 +22,9 @@ Continue work on select and removed handshake.
 
 ### 2024-01-13 - Part 3: Select
 Got basic communciation between server and players working. One way only.
+
+### 2025-01-14 - Storing data
+Server stores responses from both clients.
+
+### 2025-01-15 - Bidirectionality
+Both clients now know each other's responses. Have yet to implement winning system.

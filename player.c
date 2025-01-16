@@ -8,10 +8,11 @@
 #include <signal.h>
 
 #define WKP "lobby"
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 30
+#define PIPE_SIZE 10
 
-char pipe_name[BUFFER_SIZE];
-char pipe_name2[BUFFER_SIZE];
+char pipe_name[PIPE_SIZE];
+char pipe_name2[PIPE_SIZE];
 
 static void sighandler(int signo) {
   if (signo == SIGINT) {
