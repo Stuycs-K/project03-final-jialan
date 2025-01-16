@@ -8,7 +8,7 @@
 #include <signal.h>
 
 #define WKP "lobby"
-#define BUFFER_SIZE 30
+#define BUFFER_SIZE 50
 #define PIPE_SIZE 10
 
 char pipe_name[PIPE_SIZE];
@@ -60,12 +60,12 @@ int main() {
     strcat(pipe_name2, pipe_name);
     strcat(pipe_name2, "_2");
     mkfifo(pipe_name2, 0644);
-    printf("new pipe name: %s\n", pipe_name2);
-    
+    //printf("new pipe name: %s\n", pipe_name2);
+
     int from_server = open(pipe_name2, O_RDONLY);
     int bytes_read = read(from_server, buffer2, sizeof(buffer2));
     printf("Received from server: %s\n", buffer2);
-    printf("bytes read: %d\n", bytes_read);
+    //printf("bytes read: %d\n", bytes_read);
 
     close(from_server);
     remove(pipe_name);

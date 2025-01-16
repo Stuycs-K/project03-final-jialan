@@ -10,7 +10,7 @@
 #include "handshake.h"
 
 #define WKP "lobby"
-#define BUFFER_SIZE 30
+#define BUFFER_SIZE 50
 #define PIPE_SIZE 10
 #define MAX_CLIENTS 2
 
@@ -43,7 +43,7 @@ void check_connections(int wkp_fd) {
                 strcpy(client_names[client_count], client_pipe_name);
                 client_count++;
             } else {
-                printf("Max clients reached. Cannot accept %s\n", client_pipe_name);
+                printf("Max clients reached. Cannot accept client %s\n", client_pipe_name);
                 exit(1);
             }
         }
@@ -74,7 +74,7 @@ int write_to_players(int i, char* buffer) {
     close(client_fds[i]);
     for (int opponent=0; opponent < client_count; opponent++) {
         if (opponent != i) {
-            sprintf(buffer, "Player %s chose %s", client_names[i], actions[i]);
+            sprintf(buffer, "Player %s chose %s. ", client_names[i], actions[i]);
             int to_client = open(client_names[opponent], O_WRONLY);
             if (to_client==-1) {
                 perror("opening to client write error");
@@ -92,6 +92,35 @@ int write_to_players(int i, char* buffer) {
     return temp_fd;
 }
 
+void win_conditions(int i, int opponent) {
+  if (strcmp(actions[i], "paper")==0) {
+    if (strcmp(actions[opponent], "rock")==0) {
+      responses[i] = 1;
+      responses[opponent] = -1;
+    }
+    else if (strcmp(actions[i], "scissors")==0) {
+      if (strcmp(actions[opponent], "paper")==0)
+      responses[i] = 1;
+      responses[opponent] = -1;
+    }
+    else if (strcmp(actions[i], "rock")==0) {
+      if (strcmp(actions[opponent], "scissors")==0) {
+        responses[i] = 1;
+        responses[opponent] = -1;
+      }
+    }
+    else if (strcmp(actions[i], actions[opponent])==0){ //draw
+      responses[i] = 0;
+      responses[opponent] = 0;
+    }
+    else { //opponent wins
+      responses[i] = -1;
+      responses[opponent] = 1;
+    }
+  }
+
+}
+
 void write_to_players2(int i, char* buffer) {
   int opponent;
   if (i==(client_count-1)) {
@@ -100,29 +129,23 @@ void write_to_players2(int i, char* buffer) {
   else {
     opponent=i+1;
   }
-  printf("---Player %s vs Player %s---\n", client_names[i], client_names[opponent]);
+  printf("\n---Player %s vs Player %s---\n", client_names[i], client_names[opponent]);
 
   //checking who won
-  if (strcmp(actions[i], "paper") {
-  	if (strcmp(actions[opponent], "rock")) {
-  		// i won
-  	}
-  	else if (strcmp(actions[i], "scissors")) {
-  		if (strcmp(actions[opponent], "paper"))
-  		// i won
-  	}
-  	else if (strcmp(actions[i], "rock")) {
-  		if (strcmp(actions[opponent], "scissors")) {
-  			//i won
-  		}
-  	}
-  	else {
-  		// opponent wins
-  	}
-  }
-
+  win_conditions(i, opponent);
   char buffer2[BUFFER_SIZE];
-  sprintf(buffer2, "Player %s chose %s\n", client_names[i], actions[i]);
+
+  sprintf(buffer2, "Player %s chose %s.", client_names[i], actions[i]);
+  // to opponent
+  if (responses[opponent] > 0) {
+    strcat(buffer2, "You won!");
+  }
+  else if (responses[opponent]==0) {
+    strcat(buffer2, "It's a draw!");
+  }
+  else {
+    strcat(buffer2, "You lost!");
+  }
   char client_pipe2[BUFFER_SIZE];
   sprintf(client_pipe2, "%s_2", client_names[opponent]);
   printf("client pipe new: %s\n", client_pipe2);
@@ -135,9 +158,17 @@ void write_to_players2(int i, char* buffer) {
   if (bytes_write==-1) {
     perror("writing to client error");
   }
-  printf("Bytes wrote %d\n\n", bytes_write);
+  //printf("Bytes wrote %d\n\n", bytes_write);
   close(to_client);
   response = 0;
+}
+
+void clear_previous_game() {
+  for (int i=0;i<client_count;i++ ){
+    responses[i] = 0;
+  }
+  client_count = client_count-2;
+  printf("\nNumber of clients left: %d", client_count);
 }
 
 int main() {
@@ -147,7 +178,7 @@ int main() {
 
     // server setup
     wkp_fd = server_setup();
-
+    printf("Server Log:\n");
     while (1) {
         FD_ZERO(&read_fds);
         FD_SET(wkp_fd, &read_fds);
@@ -180,7 +211,8 @@ int main() {
                       for (int i=0; i<2; i++) {
                         write_to_players2(i, buffer);
                       }
-                      printf("---A game has ended---\n");
+                      clear_previous_game();
+                      printf("\n---A game has ended---\n");
                     }
                 }
             }

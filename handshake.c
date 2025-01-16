@@ -1,5 +1,8 @@
 #include "handshake.h"
 
+
+
+
 int server_setup() {
   printf("Waiting for connections...\n");
   int wkp_fd;
@@ -9,7 +12,7 @@ int server_setup() {
       perror("Failed to open WKP");
       exit(1);
   }
-  
+
   // remove(WKP);
   return wkp_fd;
 
