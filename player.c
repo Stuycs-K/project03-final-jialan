@@ -25,8 +25,16 @@ static void sighandler(int signo) {
 int main() {
     //creating private pipe
     signal(SIGINT, sighandler);
+
+    // printf("Type your game ID (4 digits) or enter for guest mode: ");
+    // fgets(pipe_name, PIPE_SIZE, stdin);
+    // if (strlen(pipe_name)==1) {
+    //   printf("Guest mode: ");
+    //   sprintf(pipe_name, "%d", getpid());
+    // }
     sprintf(pipe_name, "%d", getpid());
     mkfifo(pipe_name, 0644);
+    printf("Welcome player %s\n", pipe_name);
 
     //connecting to server
     int wkp_fd = open(WKP, O_WRONLY);
@@ -34,7 +42,7 @@ int main() {
         perror("Failed to connect to server (WKP)");
         exit(1);
     }
-    // pipe_name[strlen(pipe_name)] = '\0';
+
     write(wkp_fd, pipe_name, sizeof(pipe_name));
     close(wkp_fd);
 
@@ -44,11 +52,19 @@ int main() {
         perror("Failed to open client pipe");
         exit(1);
     }
-    printf("Player %s\n", pipe_name);
+    //printf("Player %s\n", pipe_name);
     char buffer[BUFFER_SIZE];
+    while (1) {
     printf("Enter: ");
     fgets(buffer, BUFFER_SIZE, stdin);
     buffer[strcspn(buffer, "\n")] = 0;
+    if (!strcmp(buffer, "rock") || !strcmp(buffer, "paper") || !strcmp(buffer, "scissors")) {
+      printf("Not a valid choice!\n");
+      }
+    else {
+      break;
+    }
+    }
     write(client_fd, buffer, sizeof(buffer));
     printf("Sent %s to opponent\n", buffer);
     close(client_fd);

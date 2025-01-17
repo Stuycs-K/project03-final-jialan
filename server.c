@@ -12,7 +12,7 @@
 #define WKP "lobby"
 #define BUFFER_SIZE 50
 #define PIPE_SIZE 10
-#define MAX_CLIENTS 2
+#define MAX_CLIENTS 4
 
 int client_fds[MAX_CLIENTS];
 char* client_names[MAX_CLIENTS];
@@ -37,6 +37,7 @@ void check_connections(int wkp_fd) {
         if (bytes_read > 0) {
             printf("New client connected: %s\n", client_pipe_name);
             if (client_count < MAX_CLIENTS) {
+              // if (client_pipe_name)
                 int client_fd = open(client_pipe_name, O_RDONLY);
                 client_fds[client_count] = client_fd;
                 client_names[client_count] = malloc(strlen(client_pipe_name)+1);
