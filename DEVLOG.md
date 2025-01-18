@@ -18,7 +18,7 @@ Majority of the time spent understanding how select works. Tried to get select w
 but failed to for both class and home session.
 
 ### 2024-01-10 - Part 2: Select
-Continue work on select and removed handshake.
+Continue work on select and 
 
 ### 2024-01-13 - Part 3: Select
 Got basic communciation between server and players working. One way only.
@@ -28,3 +28,9 @@ Server stores responses from both clients.
 
 ### 2025-01-15 - Bidirectionality
 Both clients now know each other's responses. Have yet to implement winning system.
+
+### 2025-01-16 - Winning
+Players can now win the game. Basic game is complete.
+
+### 2025-01-17 - Potential additions
+Planning to work on the tournament style or file to save player's win streak.
