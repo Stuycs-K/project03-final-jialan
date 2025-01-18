@@ -59,11 +59,11 @@ int main() {
     fgets(buffer, BUFFER_SIZE, stdin);
     buffer[strcspn(buffer, "\n")] = 0;
     if (!strcmp(buffer, "rock") || !strcmp(buffer, "paper") || !strcmp(buffer, "scissors")) {
-      printf("Not a valid choice!\n");
+      break;
       }
     else {
-      break;
-    }
+      printf("Not a valid choice: (rock/paper/scissors)\n");
+    	}
     }
     write(client_fd, buffer, sizeof(buffer));
     printf("Sent %s to opponent\n", buffer);
