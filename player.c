@@ -39,29 +39,27 @@ int main() {
       mkfifo(pipe_name, 0644);
 
       int return_player=0;
-      int line=0;
       char line_buff[256];
       char match[PIPE_SIZE];
-      int win_count, match_num;
-      FILE *w = fopen("player_log.txt", "w");
-      fclose(w);
-      FILE *fd = fopen("player_log.txt", "r+");
+      int win_count;
+      // FILE *w = fopen("player_log.txt", "w");
+      // fclose(w);
+      FILE *fd = fopen("player_log.txt", "a+");
       while (fgets(line_buff, sizeof(line_buff), fd)) {
-        sscanf(line_buff, "%d %d %d", &line, &match_num, &win_count);
-        sprintf(match, "%d", match_num);
+        sscanf(line_buff, "%s %d", match, &win_count);
+        printf("PIPE_NAME: %s VS MATCH: %s\n", pipe_name, match);
         if (strcmp(pipe_name, match)==0) {
           printf("Welcome back player %s (%d wins)\n", match, win_count);
           return_player = 1;
+          break;
         }
-        line++;
+        else {
+        	continue;
+        }
       }
-      if (return_player!=-1) {
+      if (return_player!=1) {
         printf("Welcome new player %s!\n", pipe_name);
-        int info[3] = {line+1 , getpid(), 0};
-        int w = fwrite(info, sizeof(int), 3, fd);
-        if (w==-1) {
-          perror("error writing to player_log.txt");
-        	}      
+        fprintf(fd, "%s %d\n", pipe_name, 0);  
         }
         fclose(fd);
     }

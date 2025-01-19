@@ -98,17 +98,18 @@ void save_wins(int i) {
     if (strlen(client_names[i])==3) {
         char line_buff[256];
         char match[PIPE_SIZE];
-        int win_count, match_num, line;
-        printf("Updating player_log.txt");
+        int win_count;
+        printf("Updating player_log.txt\n");
         FILE *fd = fopen("player_log.txt", "r+");
         while (fgets(line_buff, sizeof(line_buff), fd)) {
-            sscanf(line_buff, "%d %d %d", &line, &match_num, &win_count);
-            sprintf(match, "%d", match_num);
+        	int line = ftell(fd) - strlen(line_buff);
+            sscanf(line_buff, "%s %d", match, &win_count);
             if (strcmp(client_names[i], match)==0) {
-                printf("Writing to %d: %d, %d", line, match_num, win_count+1);
-                int info[3] = {line, match_num, win_count+1};
+            	win_count+=1;
+                printf("Writing: %s, %d", match, win_count);
                 fseek(fd, line, SEEK_SET);
-                fwrite(info, sizeof(int), 3, fd);
+                fprintf(fd, "%s %d\n", match, win_count);
+                fflush(fd);
                 break;
             }
         }
@@ -116,36 +117,46 @@ void save_wins(int i) {
     }
 }
 
+void update_win(int player1, int player2) {
+//player 1 is winner
+	responses[player1] = 1;
+	responses[player2] = -1;
+	save_wins(player1);
+}
+
 void win_conditions(int i, int opponent) {
+//player 1 is i, player 2 is opponent
   if (strcmp(actions[i], "paper")==0) {
     if (strcmp(actions[opponent], "rock")==0) {
-      responses[i] = 1;
-      responses[opponent] = -1;
-      save_wins(i);
+    	update_win(i, opponent);
     }
-    else if (strcmp(actions[i], "scissors")==0) {
-      if (strcmp(actions[opponent], "paper")==0)
-      responses[i] = 1;
-      responses[opponent] = -1;
-      save_wins(i);
+    else if (strcmp(actions[opponent], "scissors")==0) {
+    	update_win(opponent,i);
     }
-    else if (strcmp(actions[i], "rock")==0) {
-      if (strcmp(actions[opponent], "scissors")==0) {
-        responses[i] = 1;
-        responses[opponent] = -1;
-        save_wins(i);
+   }
+   
+   if (strcmp(actions[i], "scissors")==0) {
+      if (strcmp(actions[opponent], "paper")==0) {
+      	update_win(i, opponent);
+      }
+      else if (strcmp(actions[opponent], "rock")==0) {
+      	update_win(opponent, i);
       }
     }
-    else if (strcmp(actions[i], actions[opponent])==0){ //draw
+    
+    if (strcmp(actions[i], "rock")==0) {
+      if (strcmp(actions[opponent], "scissors")==0) {
+        update_win(i, opponent);
+      }
+      else if (strcmp(actions[opponent], "paper")==0) {
+      	update_win(opponent, i);
+      }
+    }
+    
+    if (strcmp(actions[i], actions[opponent])==0){ //draw
       responses[i] = 0;
       responses[opponent] = 0;
     }
-    else { //opponent wins
-      responses[i] = -1;
-      responses[opponent] = 1;
-      save_wins(opponent);
-    }
-  }
 }
 
 
@@ -165,7 +176,7 @@ void write_to_players2(int i, char* buffer) {
 
   sprintf(buffer2, "Player %s chose %s.", client_names[i], actions[i]);
   // to opponent
-  if (responses[opponent] > 0) {
+  if (responses[opponent]==1) {
     strcat(buffer2, "You won!");
   }
   else if (responses[opponent]==0) {
