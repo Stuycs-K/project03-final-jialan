@@ -12,7 +12,7 @@
 #define WKP "lobby"
 #define BUFFER_SIZE 50
 #define PIPE_SIZE 10
-#define MAX_CLIENTS 4
+#define MAX_CLIENTS 2
 
 int client_fds[MAX_CLIENTS];
 char* client_names[MAX_CLIENTS];
@@ -174,7 +174,7 @@ void write_to_players2(int i, char* buffer) {
   win_conditions(i, opponent);
   char buffer2[BUFFER_SIZE];
 
-  sprintf(buffer2, "Player %s chose %s.", client_names[i], actions[i]);
+  sprintf(buffer2, "Player %s chose %s. ", client_names[i], actions[i]);
   // to opponent
   if (responses[opponent]==1) {
     strcat(buffer2, "You won!");

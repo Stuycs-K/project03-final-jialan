@@ -36,7 +36,14 @@ int main() {
     }
     else {
       // sprintf(pipe_name, "%d", getpid());
-      mkfifo(pipe_name, 0644);
+      struct stat stat_buf;
+      if (stat(pipe_name, &stat_buf)==0) {
+      	printf("Player ID is in session.\n");
+      	exit(1);
+      }
+      else { //pipe doesn't exist yet
+      	mkfifo(pipe_name, 0644);
+      	}
 
       int return_player=0;
       char line_buff[256];
