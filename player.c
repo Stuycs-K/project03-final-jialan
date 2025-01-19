@@ -26,15 +26,45 @@ int main() {
     //creating private pipe
     signal(SIGINT, sighandler);
 
-    // printf("Type your game ID (4 digits) or enter for guest mode: ");
-    // fgets(pipe_name, PIPE_SIZE, stdin);
-    // if (strlen(pipe_name)==1) {
-    //   printf("Guest mode: ");
-    //   sprintf(pipe_name, "%d", getpid());
-    // }
-    sprintf(pipe_name, "%d", getpid());
-    mkfifo(pipe_name, 0644);
-    printf("Welcome player %s\n", pipe_name);
+    printf("Type your game ID (3 digits) or enter for guest mode: ");
+    fgets(pipe_name, PIPE_SIZE, stdin);
+    pipe_name[strcspn(pipe_name, "\n")] = 0;
+    if (strlen(pipe_name)==0) {
+      sprintf(pipe_name, "%d", getpid());
+      printf("Guest mode: (%s)\n", pipe_name);
+      mkfifo(pipe_name, 0644);
+    }
+    else {
+      // sprintf(pipe_name, "%d", getpid());
+      mkfifo(pipe_name, 0644);
+
+      int return_player=0;
+      int line=0;
+      char line_buff[256];
+      char match[PIPE_SIZE];
+      int win_count, match_num;
+      FILE *w = fopen("player_log.txt", "w");
+      fclose(w);
+      FILE *fd = fopen("player_log.txt", "r+");
+      while (fgets(line_buff, sizeof(line_buff), fd)) {
+        sscanf(line_buff, "%d %d %d", &line, &match_num, &win_count);
+        sprintf(match, "%d", match_num);
+        if (strcmp(pipe_name, match)==0) {
+          printf("Welcome back player %s (%d wins)\n", match, win_count);
+          return_player = 1;
+        }
+        line++;
+      }
+      if (return_player!=-1) {
+        printf("Welcome new player %s!\n", pipe_name);
+        int info[3] = {line+1 , getpid(), 0};
+        int w = fwrite(info, sizeof(int), 3, fd);
+        if (w==-1) {
+          perror("error writing to player_log.txt");
+        	}      
+        }
+        fclose(fd);
+    }
 
     //connecting to server
     int wkp_fd = open(WKP, O_WRONLY);

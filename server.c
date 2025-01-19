@@ -20,6 +20,7 @@ char *actions[MAX_CLIENTS];
 int response = 0;
 int client_count = 0;
 int responses[MAX_CLIENTS];
+// int wins[MAX_CLIENTS];
 fd_set read_fds;
 
 static void sighandler(int signo) {
@@ -37,7 +38,6 @@ void check_connections(int wkp_fd) {
         if (bytes_read > 0) {
             printf("New client connected: %s\n", client_pipe_name);
             if (client_count < MAX_CLIENTS) {
-              // if (client_pipe_name)
                 int client_fd = open(client_pipe_name, O_RDONLY);
                 client_fds[client_count] = client_fd;
                 client_names[client_count] = malloc(strlen(client_pipe_name)+1);
@@ -78,14 +78,14 @@ int write_to_players(int i, char* buffer) {
             sprintf(buffer, "Player %s chose %s. ", client_names[i], actions[i]);
             int to_client = open(client_names[opponent], O_WRONLY);
             if (to_client==-1) {
-                perror("opening to client write error");
+                perror("Opening to client write error");
             }
             int bytes_write = write(to_client, buffer, sizeof(buffer));
             printf("Wrote to clients: %s", buffer);
             if (bytes_write==-1) {
-                perror("writing to client error");
+                perror("Writing to client error");
             }
-            printf("bytes wrote %d\n", bytes_write);
+            printf("Bytes wrote %d\n", bytes_write);
             close(to_client);
         }
     }
@@ -93,21 +93,47 @@ int write_to_players(int i, char* buffer) {
     return temp_fd;
 }
 
+
+void save_wins(int i) {
+    if (strlen(client_names[i])==3) {
+        char line_buff[256];
+        char match[PIPE_SIZE];
+        int win_count, match_num, line;
+        printf("Updating player_log.txt");
+        FILE *fd = fopen("player_log.txt", "r+");
+        while (fgets(line_buff, sizeof(line_buff), fd)) {
+            sscanf(line_buff, "%d %d %d", &line, &match_num, &win_count);
+            sprintf(match, "%d", match_num);
+            if (strcmp(client_names[i], match)==0) {
+                printf("Writing to %d: %d, %d", line, match_num, win_count+1);
+                int info[3] = {line, match_num, win_count+1};
+                fseek(fd, line, SEEK_SET);
+                fwrite(info, sizeof(int), 3, fd);
+                break;
+            }
+        }
+        fclose(fd);
+    }
+}
+
 void win_conditions(int i, int opponent) {
   if (strcmp(actions[i], "paper")==0) {
     if (strcmp(actions[opponent], "rock")==0) {
       responses[i] = 1;
       responses[opponent] = -1;
+      save_wins(i);
     }
     else if (strcmp(actions[i], "scissors")==0) {
       if (strcmp(actions[opponent], "paper")==0)
       responses[i] = 1;
       responses[opponent] = -1;
+      save_wins(i);
     }
     else if (strcmp(actions[i], "rock")==0) {
       if (strcmp(actions[opponent], "scissors")==0) {
         responses[i] = 1;
         responses[opponent] = -1;
+        save_wins(i);
       }
     }
     else if (strcmp(actions[i], actions[opponent])==0){ //draw
@@ -117,10 +143,11 @@ void win_conditions(int i, int opponent) {
     else { //opponent wins
       responses[i] = -1;
       responses[opponent] = 1;
+      save_wins(opponent);
     }
   }
-
 }
+
 
 void write_to_players2(int i, char* buffer) {
   int opponent;
@@ -149,15 +176,15 @@ void write_to_players2(int i, char* buffer) {
   }
   char client_pipe2[BUFFER_SIZE];
   sprintf(client_pipe2, "%s_2", client_names[opponent]);
-  printf("client pipe new: %s\n", client_pipe2);
+  printf("Client pipe new: %s\n", client_pipe2);
   int to_client = open(client_pipe2, O_WRONLY);
   if (to_client==-1) {
-    perror("opening to client write error");
+    perror("Opening to client write error");
   }
   int bytes_write = write(to_client, buffer2, sizeof(buffer2));
   printf("Wrote to client %s: %s", client_names[opponent], buffer2);
   if (bytes_write==-1) {
-    perror("writing to client error");
+    perror("Writing to client error");
   }
   //printf("Bytes wrote %d\n\n", bytes_write);
   close(to_client);
@@ -189,7 +216,7 @@ int main() {
 
         int activity = select(max_fd + 1, &read_fds, NULL, NULL, NULL);
         if (activity < 0) {
-            perror("select error");
+            perror("Select error");
             break;
         }
 
