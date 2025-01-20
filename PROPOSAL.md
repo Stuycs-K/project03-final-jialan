@@ -10,9 +10,8 @@ Rock paper scissors between 2 people.
     
 # Intended usage:
 
-Type in your choice and wait for a response or until the timer runs out.
-The results will return in the terminal and the points will be stored in one of the corners.
-Exit the game with exit and other features by typing in the command.
+Type in your choice and wait for a response from opponent.
+The results will return in the terminal and the points will be stored in files.
   
 # Technical Details:
 
@@ -30,7 +29,7 @@ How you are breaking down the project and who is responsible for which parts.
 - saving game, pointer counter, etc
   
 What data structures you will be using and how.
-- maybe arrays, not entirely sure if any
+- arrays
     
 # Intended pacing:
 

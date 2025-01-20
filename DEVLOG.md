@@ -37,3 +37,6 @@ Planning to work on the tournament style or file to save player's win streak.
 
 ### 2025-01-19 - Saving wins
 The player can now save their win count with player ID or play by guest mode.
+
+### 2025-01-20 - Making video and finishing up
+Added video and updated md files.

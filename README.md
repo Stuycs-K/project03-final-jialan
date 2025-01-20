@@ -9,6 +9,8 @@ Jialan Chen
 
 Explain what is this project:
 - 2 player rock paper scissor
+Video link :
+- https://drive.google.com/file/d/1EL7wH1L-WiGw3hwb9vocsF-2lSKUPb4k/view?usp=drive_link
   
 ### Instructions:
 
