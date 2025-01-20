@@ -7,7 +7,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
-#include "handshake.h"
 
 #define WKP "lobby"
 #define BUFFER_SIZE 50
@@ -20,7 +19,7 @@ char *actions[MAX_CLIENTS];
 int response = 0;
 int client_count = 0;
 int responses[MAX_CLIENTS];
-// int wins[MAX_CLIENTS];
+int one_winner = 0;
 fd_set read_fds;
 
 static void sighandler(int signo) {
@@ -28,6 +27,20 @@ static void sighandler(int signo) {
     remove(WKP);
     kill(getpid(), SIGTERM);
   }
+}
+
+int server_setup() {
+  printf("Waiting for connections...\n");
+  int wkp_fd;
+  mkfifo(WKP, 0644);
+  wkp_fd = open(WKP, O_RDONLY);
+  if (wkp_fd==-1) {
+      perror("Failed to open WKP");
+      exit(1);
+  }
+  // remove(WKP);
+  return wkp_fd;
+
 }
 
 void check_connections(int wkp_fd) {
@@ -104,11 +117,12 @@ void save_wins(int i) {
         while (fgets(line_buff, sizeof(line_buff), fd)) {
         	int line = ftell(fd) - strlen(line_buff);
             sscanf(line_buff, "%s %d", match, &win_count);
-            if (strcmp(client_names[i], match)==0) {
+            if (strcmp(client_names[i], match)==0 && one_winner==0) {
             	win_count+=1;
-                printf("Writing: %s, %d", match, win_count);
+                printf("Writing: %s, %d\n", match, win_count);
                 fseek(fd, line, SEEK_SET);
                 fprintf(fd, "%s %d\n", match, win_count);
+                one_winner=1;
                 fflush(fd);
                 break;
             }
@@ -207,6 +221,7 @@ void clear_previous_game() {
     responses[i] = 0;
   }
   client_count = client_count-2;
+  one_winner=0;
   printf("\nNumber of clients left: %d", client_count);
 }
 

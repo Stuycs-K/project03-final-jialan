@@ -38,7 +38,7 @@ int main() {
       // sprintf(pipe_name, "%d", getpid());
       struct stat stat_buf;
       if (stat(pipe_name, &stat_buf)==0) {
-      	printf("Player ID is in session.\n");
+      	printf("Player ID is already in session.\n");
       	exit(1);
       }
       else { //pipe doesn't exist yet
@@ -54,7 +54,7 @@ int main() {
       FILE *fd = fopen("player_log.txt", "a+");
       while (fgets(line_buff, sizeof(line_buff), fd)) {
         sscanf(line_buff, "%s %d", match, &win_count);
-        printf("PIPE_NAME: %s VS MATCH: %s\n", pipe_name, match);
+        //printf("PIPE_NAME: %s VS MATCH: %s\n", pipe_name, match);
         if (strcmp(pipe_name, match)==0) {
           printf("Welcome back player %s (%d wins)\n", match, win_count);
           return_player = 1;
@@ -101,7 +101,7 @@ int main() {
     	}
     }
     write(client_fd, buffer, sizeof(buffer));
-    printf("Sent %s to opponent\n", buffer);
+    printf("Sent %s to opponent. ", buffer);
     close(client_fd);
 
     //reading from server
@@ -115,7 +115,8 @@ int main() {
 
     int from_server = open(pipe_name2, O_RDONLY);
     int bytes_read = read(from_server, buffer2, sizeof(buffer2));
-    printf("Received from server: %s\n", buffer2);
+    printf("----%s----\n", buffer2);
+    //printf("Received from server: %s\n", buffer2);
     //printf("bytes read: %d\n", bytes_read);
 
     close(from_server);

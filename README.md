@@ -13,7 +13,11 @@ Explain what is this project:
 ### Instructions:
 
 How does the user install/compile/run the program.
--make compile and ./game
+- make compile
+- run three local terminals
+- make startup (start up server)
+- make game (for the two players)
 
 How does the user interact with this program?
--terminal and typing in commands/actions
+- typing in rock, paper, or scissors
+- waiting on opponent and results!

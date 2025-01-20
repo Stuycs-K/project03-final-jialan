@@ -3,16 +3,14 @@ startup:
 game:
 	@./player
 compile: player server
-server: server.o handshake.o
-	@gcc -o server server.o handshake.o
-player: player.o handshake.o
-	@gcc -o player player.o handshake.o
-player.o: player.c handshake.h 
+server: server.o
+	@gcc -o server server.o
+player: player.o 
+	@gcc -o player player.o
+player.o: player.c
 	@gcc -c player.c
-server.o: server.c handshake.h
+server.o: server.c
 	@gcc -c server.c
-handshake.o: handshake.c handshake.h 
-	@gcc -c handshake.c
 clean:
 	@rm *.o
 	@rm player
