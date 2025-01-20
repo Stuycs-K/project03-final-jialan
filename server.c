@@ -49,7 +49,7 @@ void check_connections(int wkp_fd) {
     if (FD_ISSET(wkp_fd, &read_fds)) {
         int bytes_read = read(wkp_fd, client_pipe_name, sizeof(client_pipe_name));
         if (bytes_read > 0) {
-            printf("New client connected: %s\n", client_pipe_name);
+            printf("New client connection: %s\n", client_pipe_name);
             if (client_count < MAX_CLIENTS) {
                 int client_fd = open(client_pipe_name, O_RDONLY);
                 client_fds[client_count] = client_fd;
@@ -58,7 +58,6 @@ void check_connections(int wkp_fd) {
                 client_count++;
             } else {
                 printf("Max clients reached. Cannot accept client %s\n", client_pipe_name);
-                exit(1);
             }
         }
     }
